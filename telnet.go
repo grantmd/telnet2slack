@@ -35,14 +35,52 @@ func handleTelnetConnection(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr().String()
 	fmt.Println("New connection from " + remoteAddr)
 
+	var text string
+
 	buf := bufio.NewReader(conn)
 	for {
-		line, err := buf.ReadString('\n')
+		bytes, err := buf.ReadBytes('\n')
 		if err != nil {
 			fmt.Println("Client " + remoteAddr + " disconnected.")
 			break
 		}
 
-		conn.Write([]byte("You said: " + line))
+		fmt.Println(bytes)
+
+		i := 0
+		for i < len(bytes) {
+			byte := bytes[i]
+			if byte == 255 {
+				command := bytes[i+1]
+				option := bytes[i+2]
+
+				switch command {
+				case 254:
+					fmt.Printf("IAC DON'T %d\n", option)
+					i += 3
+				case 253:
+					fmt.Printf("IAC DO %d\n", option)
+					i += 3
+				case 252:
+					fmt.Printf("IAC WON'T %d\n", option)
+					i += 3
+				case 251:
+					fmt.Printf("IAC WILL %d\n", option)
+					i += 3
+				default:
+					i++
+				}
+			} else {
+				if byte >= 32 && byte <= 126 {
+					text += string(byte)
+				}
+				i++
+			}
+		}
+
+		if len(text) > 0 {
+			conn.Write([]byte("You said: " + text + "\n"))
+			text = ""
+		}
 	}
 }
