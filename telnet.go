@@ -32,13 +32,14 @@ func telnetListenAndServe() {
 
 func handleTelnetConnection(conn net.Conn) {
 	defer conn.Close()
-	fmt.Println("New connection from " + conn.RemoteAddr().String())
+	remoteAddr := conn.RemoteAddr().String()
+	fmt.Println("New connection from " + remoteAddr)
 
 	buf := bufio.NewReader(conn)
 	for {
 		line, err := buf.ReadString('\n')
 		if err != nil {
-			fmt.Println("Client " + conn.RemoteAddr().String() + " disconnected.")
+			fmt.Println("Client " + remoteAddr + " disconnected.")
 			break
 		}
 
