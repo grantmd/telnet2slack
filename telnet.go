@@ -35,7 +35,7 @@ func handleTelnetConnection(conn net.Conn) {
 	remoteAddr := conn.RemoteAddr().String()
 	fmt.Println("New connection from " + remoteAddr)
 
-	conn.Write([]byte("Welcome to telnet2slack. What is your name?\r\n"))
+	writeTelnetOutput(conn, "Welcome to telnet2slack. What is your name?\r\n")
 
 	var name string
 	var input string
@@ -53,9 +53,9 @@ func handleTelnetConnection(conn net.Conn) {
 		if len(input) > 0 {
 			if name == "" {
 				name = input
-				conn.Write([]byte("Hello " + input + "!\r\n"))
+				writeTelnetOutput(conn, "Hello "+input+"!\r\n")
 			} else {
-				conn.Write([]byte("You said: " + input + "\r\n"))
+				writeTelnetOutput(conn, name+": "+input+"\r\n")
 			}
 		}
 	}
@@ -98,4 +98,8 @@ func readTelnetInput(bytes []byte) string {
 	}
 
 	return input
+}
+
+func writeTelnetOutput(conn net.Conn, output string) {
+	conn.Write([]byte(output))
 }
