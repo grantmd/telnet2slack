@@ -73,6 +73,7 @@ func readTelnetInput(bytes []byte) string {
 			option := bytes[i+2]
 
 			switch command {
+			// https://www.iana.org/assignments/telnet-options/telnet-options.xhtml
 			case 254:
 				fmt.Printf("IAC DON'T %d\n", option)
 				i += 3
