@@ -16,10 +16,12 @@ var (
 	slackConnection *websocket.Conn
 )
 
+// SlackConn represents a websocket connection to Slack
 type SlackConn struct {
 	ws *websocket.Conn
 }
 
+// Connect creates a connection to Slack's websocket by authenticating via API and then connecting to the URL we are given
 func (s *SlackConn) Connect() (err error) {
 	if slackToken == "" {
 		panic("No Slack token is set")
@@ -76,6 +78,7 @@ func (s *SlackConn) Connect() (err error) {
 	return nil
 }
 
+// Read a message off the websocket
 func (s *SlackConn) read() (message []byte, err error) {
 	_, message, err = s.ws.ReadMessage()
 	if err != nil {
@@ -85,11 +88,13 @@ func (s *SlackConn) read() (message []byte, err error) {
 	return message, nil
 }
 
+// Write a message to the websocket
 func (s *SlackConn) write(data []byte) (err error) {
 	err = s.ws.WriteMessage(websocket.TextMessage, data)
 	return err
 }
 
+// Tell the remote side we want to close
 func (s *SlackConn) close() (err error) {
 	err = s.ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	return err
