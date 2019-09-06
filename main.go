@@ -6,5 +6,6 @@ import (
 
 func main() {
 	fmt.Println("Starting up...")
+	slackConnect()
 	telnetListenAndServe()
 }

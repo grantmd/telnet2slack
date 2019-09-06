@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "env": {},
+            "env": {"SLACK_TOKEN": "xoxb-749773353543-747958387637-nIME7r5Zg7wp96ykP2RTTkuJ"},
             "args": []
         }
     ]
