@@ -4,8 +4,12 @@ import (
 	"fmt"
 )
 
+var (
+	slack SlackConn
+)
+
 func main() {
 	fmt.Println("Starting up...")
-	slackConnect()
+	slack.Connect()
 	telnetListenAndServe()
 }

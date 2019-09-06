@@ -16,21 +16,24 @@ var (
 	slackConnection *websocket.Conn
 )
 
-func slackConnect() {
+type SlackConn struct {
+	ws *websocket.Conn
+}
+
+func (s *SlackConn) Connect() (err error) {
 	if slackToken == "" {
 		panic("No Slack token is set")
 	}
 
 	resp, err := http.Get("https://slack.com/api/rtm.connect?token=" + slackToken)
 	if err != nil {
-		fmt.Println("Connect error:")
-		fmt.Println(err)
+		return err
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	type RTMResponse struct {
@@ -49,24 +52,45 @@ func slackConnect() {
 
 	var response RTMResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		panic(err)
+		return err
 	}
 
-	fmt.Println(response)
+	fmt.Printf("%+v\n", response)
 	if response.Ok != true {
 		panic("rtm.connect returned an error")
 	}
 
 	headers := make(http.Header)
-	slackConnection, _, err = websocket.DefaultDialer.Dial(response.URL, headers)
+	s.ws, _, err = websocket.DefaultDialer.Dial(response.URL, headers)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	_, message, err := slackConnection.ReadMessage()
+	message, err := s.read()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println(string(message))
+
+	return nil
+}
+
+func (s *SlackConn) read() (message []byte, err error) {
+	_, message, err = s.ws.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+
+	return message, nil
+}
+
+func (s *SlackConn) write(data []byte) (err error) {
+	err = s.ws.WriteMessage(websocket.TextMessage, data)
+	return err
+}
+
+func (s *SlackConn) close() (err error) {
+	err = s.ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	return err
 }
