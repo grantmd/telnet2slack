@@ -155,7 +155,8 @@ func (s *SlackConn) sendPing() (err error) {
 	return nil
 }
 
-func (s *SlackConn) sendMessage(text string) (err error) {
+// SendMessage sends the text over the websocket to Slack as a `message` type
+func (s *SlackConn) SendMessage(text string) (err error) {
 	type OutGoingMessage struct {
 		ID      int    `json:"id"`
 		Type    string `json:"type"`

@@ -60,8 +60,10 @@ func handleTelnetConnection(conn net.Conn) {
 			if name == "" {
 				name = input
 				writeTelnetOutput(conn, "Hello "+input+"!\r\n")
+				slack.SendMessage(fmt.Sprintf("%s is here!", name))
 			} else {
 				writeTelnetOutput(conn, name+": "+input+"\r\n")
+				slack.SendMessage(fmt.Sprintf("%s: %s", name, input))
 			}
 		}
 	}
