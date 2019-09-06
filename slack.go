@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -18,7 +19,8 @@ var (
 
 // SlackConn represents a websocket connection to Slack
 type SlackConn struct {
-	ws *websocket.Conn
+	ws               *websocket.Conn
+	currentMessageID int
 }
 
 // Connect creates a connection to Slack's websocket by authenticating via API and then connecting to the URL we are given
@@ -70,14 +72,37 @@ func (s *SlackConn) Connect() (err error) {
 	}
 
 	err = nil
+	// In the background wait for messages
 	go func() {
 		for {
+			// Block for a message on the socket
 			message, err := s.read()
 			if err != nil {
 				break
 			}
 
-			fmt.Println(string(message))
+			// Decode the json into a generic struct
+			var v interface{}
+			json.Unmarshal(message, &v)
+			data := v.(map[string]interface{})
+
+			switch data["type"] {
+			case "hello":
+				fmt.Println("Successfully connected to Slack")
+				s.sendPing()
+			case "message":
+				type IncomingMessage struct {
+					Type string `json:"type"`
+					Ts   string `json:"ts"`
+					User string `json:"user"`
+					Text string `json:"text"`
+				}
+				var m IncomingMessage
+				json.Unmarshal(message, &m)
+				fmt.Println("Got message: " + m.Text)
+			default:
+				fmt.Printf("%+v\n", data)
+			}
 		}
 	}()
 
@@ -104,4 +129,54 @@ func (s *SlackConn) write(data []byte) (err error) {
 func (s *SlackConn) close() (err error) {
 	err = s.ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	return err
+}
+
+func (s *SlackConn) sendPing() (err error) {
+	type Ping struct {
+		ID   int    `json:"id"`
+		Type string `json:"type"`
+		Time int64  `json:"time"`
+	}
+
+	s.currentMessageID++
+
+	var ping Ping
+	ping.ID = s.currentMessageID
+	ping.Type = "ping"
+	ping.Time = time.Now().Unix()
+
+	pingJSON, err := json.Marshal(ping)
+	if err != nil {
+		return err
+	}
+
+	s.write(pingJSON)
+
+	return nil
+}
+
+func (s *SlackConn) sendMessage(text string) (err error) {
+	type OutGoingMessage struct {
+		ID      int    `json:"id"`
+		Type    string `json:"type"`
+		Channel string `json:"channel"`
+		Text    string `json:"text"`
+	}
+
+	s.currentMessageID++
+
+	var message OutGoingMessage
+	message.ID = s.currentMessageID
+	message.Type = "message"
+	message.Channel = slackChannel
+	message.Text = text
+
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	s.write(messageJSON)
+
+	return nil
 }
