@@ -69,14 +69,19 @@ func (s *SlackConn) Connect() (err error) {
 		return err
 	}
 
-	message, err := s.read()
-	if err != nil {
-		return err
-	}
+	err = nil
+	go func() {
+		for {
+			message, err := s.read()
+			if err != nil {
+				break
+			}
 
-	fmt.Println(string(message))
+			fmt.Println(string(message))
+		}
+	}()
 
-	return nil
+	return err
 }
 
 // Read a message off the websocket
