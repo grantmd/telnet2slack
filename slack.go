@@ -50,6 +50,7 @@ func (s *SlackConn) Connect() (err error) {
 			ID   string `json:"id"`
 			Name string `json:"name"`
 		} `json:"self"`
+		Error string `json:"error"`
 	}
 
 	var response RTMResponse
