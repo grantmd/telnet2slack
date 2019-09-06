@@ -10,24 +10,30 @@ var (
 	telnetPort = 23
 )
 
-func telnetListenAndServe() {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", telnetPort))
+// TelnetServer listens for incoming telnet connections
+type TelnetServer struct {
+	ln net.Listener
+}
+
+// ListenAndServe waits for incoming telnet connections and then dispatches them
+func (t *TelnetServer) ListenAndServe() (err error) {
+	t.ln, err = net.Listen("tcp", fmt.Sprintf(":%d", telnetPort))
 	if err != nil {
-		fmt.Println("Listen error:")
-		fmt.Println(err)
+		return err
 	}
 
 	fmt.Printf("Listening on port %d\n", telnetPort)
 
 	for {
-		conn, err := ln.Accept()
+		conn, err := t.ln.Accept()
 		if err != nil {
-			fmt.Println("Accept error:")
-			fmt.Println(err)
+			return err
 		}
 
 		go handleTelnetConnection(conn)
 	}
+
+	return nil
 }
 
 func handleTelnetConnection(conn net.Conn) {

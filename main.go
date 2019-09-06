@@ -5,11 +5,12 @@ import (
 )
 
 var (
-	slack SlackConn
+	slack  SlackConn
+	telnet TelnetServer
 )
 
 func main() {
 	fmt.Println("Starting up...")
 	slack.Connect()
-	telnetListenAndServe()
+	telnet.ListenAndServe()
 }
