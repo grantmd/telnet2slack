@@ -125,8 +125,8 @@ func (s *SlackConn) write(data []byte) (err error) {
 	return err
 }
 
-// Tell the remote side we want to close
-func (s *SlackConn) close() (err error) {
+// Close tells the remote side we want to disconnect
+func (s *SlackConn) Close() (err error) {
 	err = s.ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	return err
 }

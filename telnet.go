@@ -13,7 +13,7 @@ var (
 // TelnetServer listens for incoming telnet connections
 type TelnetServer struct {
 	ln    net.Listener
-	conns []*net.Conn
+	conns []net.Conn
 }
 
 // ListenAndServe waits for incoming telnet connections and then dispatches them
@@ -31,11 +31,23 @@ func (t *TelnetServer) ListenAndServe() (err error) {
 			return err
 		}
 
-		t.conns = append(t.conns, &conn)
+		t.conns = append(t.conns, conn)
 		go handleTelnetConnection(conn)
 	}
 
 	return nil
+}
+
+// Close disconnects all connections
+func (t *TelnetServer) Close() {
+	for i, conn := range t.conns {
+		if conn == nil {
+			continue
+		}
+
+		conn.Close()
+		t.conns[i] = nil
+	}
 }
 
 func handleTelnetConnection(conn net.Conn) {
